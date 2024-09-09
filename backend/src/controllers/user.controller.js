@@ -16,17 +16,20 @@ import ApiError from "../utils/Apierror.js";
 import { uploadOnCloudinary } from "../utils/FileUpload.js";
 import ApiResponce from "../utils/Apiresponce.js";
 
-async function genrateTokens(userId){
- try {
-   const user = await User.findById(userId)
-   const accessToken = await user.genrateAccessToken()
-   const refreshToken = await user.genrateRefreshToken()
-   user.refreshToken = refreshToken
-   await user.save({validateBeforeSave : false})
-   return {accessToken, refreshToken};
- } catch (error) {
-   throw new ApiError(500, error?.message  || "Something went wrong while genrating tokens")
- }
+async function genrateTokens(userId) {
+  try {
+    const user = await User.findById(userId);
+    const accessToken = await user.genrateAccessToken();
+    const refreshToken = await user.genrateRefreshToken();
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+    return { accessToken, refreshToken };
+  } catch (error) {
+    throw new ApiError(
+      500,
+      error?.message || "Something went wrong while genrating tokens"
+    );
+  }
 }
 
 const registerUser = asynchandler(async (req, res) => {
@@ -82,7 +85,7 @@ const loginUser = asynchandler(async (req, res) => {
   // store tokens in cookies and give toekns to the user
 
   const { email, password } = req.body;
-  if ((!email || !password)) throw new ApiError(401, "plesese fill all Feiled");
+  if (!email || !password) throw new ApiError(401, "plesese fill all Feiled");
 
   const user = await User.findOne({ email: email });
 
@@ -92,31 +95,58 @@ const loginUser = asynchandler(async (req, res) => {
 
   if (!isPasswordValid) throw new ApiError(401, "incorrect password");
 
-  const {accessToken, refreshToken} = await genrateTokens(user._id)
- 
+  const { accessToken, refreshToken } = await genrateTokens(user._id);
+
   const loggedInUser = await User.findById(user._id).select(
-    "-refreshToken -password" 
-  )
-  const options ={
-    httpOnly : true,
-    secure : true,
-  }
+    "-refreshToken -password"
+  );
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
 
-  res.status(200)
-  .cookie("accessToken", accessToken, options)
-  .cookie("refreshToken", refreshToken, options)
-  .json(new ApiResponce("user loggedin", 
-    {
-      user : loggedInUser,
-      accessToken, 
-      refreshToken
-    }
-  ))
-
+  res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponce("user loggedin", {
+        user: loggedInUser,
+        accessToken,
+        refreshToken,
+      })
+    );
 });
 
-const logoutuser = asynchandler(async(req,res)=>{
-   res.status(200).json({"message"  : "ok"})
-})
+const logoutuser = asynchandler(async (req, res) => {
+  // delete the cookies from user's browser
+  // delete the refresh toekn from the user document
+  await User.findByIdAndUpdate(
+    req.user?._id,
+
+    {
+      $set: {
+        refreshToken: undefined,
+      },
+    },
+
+    {
+      new: true,
+    }
+  );
+
+  // deleting cookis
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponce("user logged out successfully ", {}, 200));
+});
 
 export { registerUser, loginUser, logoutuser };
