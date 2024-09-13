@@ -178,7 +178,7 @@ const refreshAccessToken = asynchandler(async (req, res) => {
       secure: true,
     };
 
-    const { newrefreshToken, newaccessToken } = await genrateTokens(user._id);
+    const { accessToken:newrefreshToken, refreshToken:newaccessToken } = await genrateTokens(user._id);
 
     return res
       .status(200)
@@ -214,7 +214,7 @@ const changeCurrentPassword = asynchandler(async (req, res) => {
     .json(new ApiResponce(200, {}, "password changed succesfully"));
 });
 
-export const getCurrentSession = asynchandler(async (req, res) => {
+ const getCurrentSession = asynchandler(async (req, res) => {
   return req.status(200).json(new ApiResponce(req.user));
 });
 
@@ -233,7 +233,7 @@ const updateUserDetails = asynchandler(async (req, res) => {
   // whenever we wants update any files eg.
   //avatar, or cover image create a seprate route for that
 
-  const updateduser = User.findByIdAndUpdate(
+  const updateduser = await User.findByIdAndUpdate(
     user?._id,
     {
       $set: {
@@ -250,6 +250,7 @@ const updateUserDetails = asynchandler(async (req, res) => {
 });
 
 const updateUserAvatar = asynchandler(async (req, res) => {
+
   const avatarLocalpath = req.file.path;
 
   if (!avatarLocalpath) throw new ApiError(400, "avatar file is missing");

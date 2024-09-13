@@ -1,5 +1,5 @@
 import express from "express"
-import { getCurrentSession, loginUser, logoutuser, registerUser } from "../controllers/user.controller.js"
+import { getCurrentSession, loginUser, logoutuser, refreshAccessToken, registerUser } from "../controllers/user.controller.js"
 import { upload } from "../middlewears/multer.middlewar.js"
 import { verifyJwt } from "../middlewears/auth.middlewear.js"
 
