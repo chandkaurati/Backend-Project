@@ -178,7 +178,8 @@ const refreshAccessToken = asynchandler(async (req, res) => {
       secure: true,
     };
 
-    const { accessToken:newrefreshToken, refreshToken:newaccessToken } = await genrateTokens(user._id);
+    const { accessToken: newrefreshToken, refreshToken: newaccessToken } =
+      await genrateTokens(user._id);
 
     return res
       .status(200)
@@ -214,7 +215,7 @@ const changeCurrentPassword = asynchandler(async (req, res) => {
     .json(new ApiResponce(200, {}, "password changed succesfully"));
 });
 
- const getCurrentSession = asynchandler(async (req, res) => {
+const getCurrentSession = asynchandler(async (req, res) => {
   return req.status(200).json(new ApiResponce(req.user));
 });
 
@@ -250,7 +251,7 @@ const updateUserDetails = asynchandler(async (req, res) => {
 });
 
 const updateUserAvatar = asynchandler(async (req, res) => {
-
+  // todo delete the previous image
   const avatarLocalpath = req.file.path;
 
   if (!avatarLocalpath) throw new ApiError(400, "avatar file is missing");
@@ -261,7 +262,7 @@ const updateUserAvatar = asynchandler(async (req, res) => {
     throw new ApiError(400, "Error while uploading avatar");
   }
 
- const user =   await User.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       avatar: avatar.url,
@@ -269,32 +270,82 @@ const updateUserAvatar = asynchandler(async (req, res) => {
     {
       new: true,
     }
-  ).select("-password")
-  
-  res.status(200)
-  .json(new ApiResponce(200, user, "updated user avatar"))
+  ).select("-password");
+
+  res.status(200).json(new ApiResponce(200, user, "updated user avatar"));
 });
 
-// const updateUserCoverImage = asynchandler(async (req, res) => {
-//   const coverLocalPath = req.file.path;
+const getUserChannelsProfile = asynchandler(async (req, res) => {
+  const { username } = req.params;
 
-//   if (!coverLocalPath) throw new ApiError(400, "coverimage  file is missing");
+  if (!username?.trim()) throw new ApiError(400, "username is Missing");
 
-//   const coverImage = await uploadOnCloudinary(coverLocalPath);
+  const channel = await User.aggregate([
+    {
+      $match: {
+        username: username?.toLowerCase(),
+      },
+    },
 
-//   if (!coverImage.url) {
-//     throw new ApiError(400, "Error while uploading avatar");
-//   }
-//   await User.findByIdAndUpdate(
-//     req.user?._id,
-//     {
-//       avatar: avatar.url,
-//     },
-//     {
-//       new: true,
-//     }
-//   ).select("-password")
-// });
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    },
+
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
+    },
+
+    {
+      $addFields: {
+        subscriberCount: {
+          $size: "$subscribers",
+        },
+
+        channelSubscribersToCount: {
+          $size: "subscribedTo",
+        },
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+
+    {
+      $project: {
+        fullname: 1,
+        username: 1,
+        subscriberCount: 1,
+        channelSubscribersToCount: 1,
+        isSubscribed: 1,
+        avatarg: 1,
+        email: 1,
+      },
+    },
+  ]);
+
+  if(!channel?.length){
+    throw new ApiError(404, "Channel Does Not Exist")
+  }
+
+  return res
+  .status(200)
+  .json(new ApiResponce(200, channel[0], "user canned fetched succesfully" ))
+
+});
 
 export {
   registerUser,
@@ -304,6 +355,5 @@ export {
   changeCurrentPassword,
   getCurrentSession,
   updateUserDetails,
-  updateUserAvatar
+  updateUserAvatar,
 };
-
