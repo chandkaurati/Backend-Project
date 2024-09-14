@@ -20,15 +20,15 @@ const videoSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      required: true
+      required: true,
     },
     duration: {
       type: Number,
-      required : true
+      required: true,
     },
     views: {
       type: Number,
-      default: 0
+      default: 0,
     },
     isPublished: {
       type: Boolean,
@@ -37,4 +37,4 @@ const videoSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const Video = mongoose.model("Video", videoSchema)
+export const Video = mongoose.model("Video", videoSchema);
