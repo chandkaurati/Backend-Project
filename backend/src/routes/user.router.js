@@ -1,5 +1,5 @@
 import express from "express"
-import { getCurrentSession, loginUser, logoutuser, refreshAccessToken, registerUser } from "../controllers/user.controller.js"
+import { changeCurrentPassword, getCurrentSession, loginUser, logoutuser, refreshAccessToken, registerUser, updateUserAvatar, updateUserDetails } from "../controllers/user.controller.js"
 import { upload } from "../middlewears/multer.middlewar.js"
 import { verifyJwt } from "../middlewears/auth.middlewear.js"
 
@@ -24,6 +24,11 @@ router.route("/refresh-token").post(refreshAccessToken)
 
 router.route("/get-session").post(verifyJwt, getCurrentSession)
 
+router.route("/change-password").post(verifyJwt, changeCurrentPassword )
+
+router.route("/update-details").post(verifyJwt, updateUserDetails)
+
+router.route("/update-avatar").post(verifyJwt, updateUserAvatar)
 
 export default router
 

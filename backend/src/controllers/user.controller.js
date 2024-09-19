@@ -91,7 +91,7 @@ const loginUser = asynchandler(async (req, res) => {
 
   if (!user) throw new ApiError(401, "user dosn't exists with this email");
 
-  const isPasswordValid = user.isPasswordCorrect(password);
+  const isPasswordValid = await user.isPasswordCorrect(password);
 
   if (!isPasswordValid) throw new ApiError(401, "incorrect password");
 
@@ -197,15 +197,25 @@ const refreshAccessToken = asynchandler(async (req, res) => {
 
 const changeCurrentPassword = asynchandler(async (req, res) => {
   const { oldPassword, newPassword, confirmPassword } = req.body;
+  
+  console.log(oldPassword, newPassword, confirmPassword);
+  if(!oldPassword || !newPassword || !confirmPassword){
+    throw new ApiError(400, "all fields are required")
+  }
 
-  if (newPassword !== confirmPassword)
-    throw new ApiError(401, "Passwords dosn't match");
+
+  if (newPassword !== confirmPassword) {
+    throw new ApiError(400, "Password dosn't match");
+  }
 
   const { user: loggedInUser } = req;
   const user = await User.findById(loggedInUser?._id);
   const isPasswordValidate = await user.isPasswordCorrect(oldPassword);
 
-  if (!isPasswordValidate) throw new ApiError(400, "incorrect Password");
+  console.log(isPasswordValidate);
+  if (!isPasswordValidate) {
+    throw new ApiError(400, "Incorrect password");
+  }
 
   user.password = newPassword;
   await user.save({ validateBeforeSave: false });
@@ -216,7 +226,7 @@ const changeCurrentPassword = asynchandler(async (req, res) => {
 });
 
 const getCurrentSession = asynchandler(async (req, res) => {
-  return req.status(200).json(new ApiResponce(req.user));
+  return res.status(200).json(new ApiResponce(req.user));
 });
 
 const updateUserDetails = asynchandler(async (req, res) => {
@@ -252,7 +262,8 @@ const updateUserDetails = asynchandler(async (req, res) => {
 
 const updateUserAvatar = asynchandler(async (req, res) => {
   // todo delete the previous image
-  const avatarLocalpath = req.file.path;
+ 
+  const avatarLocalpath = req.file?.path;
 
   if (!avatarLocalpath) throw new ApiError(400, "avatar file is missing");
 
@@ -337,14 +348,13 @@ const getUserChannelsProfile = asynchandler(async (req, res) => {
     },
   ]);
 
-  if(!channel?.length){
-    throw new ApiError(404, "Channel Does Not Exist")
+  if (!channel?.length) {
+    throw new ApiError(404, "Channel Does Not Exist");
   }
 
   return res
-  .status(200)
-  .json(new ApiResponce(200, channel[0], "user canned fetched succesfully" ))
-
+    .status(200)
+    .json(new ApiResponce(200, channel[0], "user canned fetched succesfully"));
 });
 
 export {
