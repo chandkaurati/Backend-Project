@@ -197,12 +197,11 @@ const refreshAccessToken = asynchandler(async (req, res) => {
 
 const changeCurrentPassword = asynchandler(async (req, res) => {
   const { oldPassword, newPassword, confirmPassword } = req.body;
-  
-  console.log(oldPassword, newPassword, confirmPassword);
-  if(!oldPassword || !newPassword || !confirmPassword){
-    throw new ApiError(400, "all fields are required")
-  }
 
+  console.log(oldPassword, newPassword, confirmPassword);
+  if (!oldPassword || !newPassword || !confirmPassword) {
+    throw new ApiError(400, "all fields are required");
+  }
 
   if (newPassword !== confirmPassword) {
     throw new ApiError(400, "Password dosn't match");
@@ -261,9 +260,7 @@ const updateUserDetails = asynchandler(async (req, res) => {
 });
 
 const updateUserAvatar = asynchandler(async (req, res) => {
-  // todo delete the previous image
- 
-  const avatarLocalpath = req.file?.path;
+  let avatarLocalpath = req.files?.avatar[0]?.path;
 
   if (!avatarLocalpath) throw new ApiError(400, "avatar file is missing");
 
