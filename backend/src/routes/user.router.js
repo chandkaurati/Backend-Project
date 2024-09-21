@@ -31,20 +31,15 @@ router.route("/logout").post(verifyJwt, logoutuser);
 
 router.route("/refresh-token").post(refreshAccessToken);
 
-router.route("/get-session").post(verifyJwt, getCurrentSession);
+router.route("/get-session").get(verifyJwt, getCurrentSession);
 
 router.route("/change-password").post(verifyJwt, changeCurrentPassword);
 
-router.route("/update-details").post(verifyJwt, updateUserDetails);
+router.route("/update-details").patch(verifyJwt, updateUserDetails);
 
-router.route("/update-avatar").post(
-  upload.fields([
-    {
-      name: "avatar",
-      maxCount: 1,
-    },
-  ]),
+router.route("/update-avatar").patch(
   verifyJwt,
+  upload.single("avatar"),
   updateUserAvatar
 );
 

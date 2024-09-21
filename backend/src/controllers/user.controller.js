@@ -239,7 +239,7 @@ const updateUserDetails = asynchandler(async (req, res) => {
 
   const user = req.user;
 
-  if (!fullname || !email) throw new ApiError(400, "All feilds are required");
+  if (!fullname && !email) throw new ApiError(400, "All feilds are required");
 
   // whenever we wants update any files eg.
   //avatar, or cover image create a seprate route for that
@@ -261,8 +261,10 @@ const updateUserDetails = asynchandler(async (req, res) => {
 });
 
 const updateUserAvatar = asynchandler(async (req, res) => {
-  let avatarLocalpath = req.files?.avatar[0]?.path;
-
+  let avatarLocalpath = req.file?.path
+  
+  // console.log(req.file)
+  // res.status(200).json({"message" : "successfull"})
   if (!avatarLocalpath) throw new ApiError(400, "avatar file is missing");
 
   const avatar = await uploadOnCloudinary(avatarLocalpath);
@@ -400,10 +402,15 @@ const getWatchHistory = asynchandler(async (req, res) => {
     },
   ]);
 
-
   return res
-  .status(200)
-  .json(ApiResponce(200, user[0].watchHistory, "watch history fetched successfully"))
+    .status(200)
+    .json(
+      ApiResponce(
+        200,
+        user[0].watchHistory,
+        "watch history fetched successfully"
+      )
+    );
 });
 
 export {
