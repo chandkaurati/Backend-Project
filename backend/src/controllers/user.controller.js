@@ -16,6 +16,7 @@ import ApiError from "../utils/Apierror.js";
 import { uploadOnCloudinary } from "../utils/FileUpload.js";
 import ApiResponce from "../utils/Apiresponce.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 async function genrateTokens(userId) {
   try {
     const user = await User.findById(userId);
@@ -354,6 +355,57 @@ const getUserChannelsProfile = asynchandler(async (req, res) => {
     .json(new ApiResponce(200, channel[0], "user canned fetched succesfully"));
 });
 
+const getWatchHistory = asynchandler(async (req, res) => {
+  const user = User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user?._id),
+      },
+    },
+
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullname: 1,
+                    username: 1,
+                    avatart: 1,
+                  },
+                },
+              ],
+            },
+          },
+
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+
+  return res
+  .status(200)
+  .json(ApiResponce(200, user[0].watchHistory, "watch history fetched successfully"))
+});
+
 export {
   registerUser,
   loginUser,
@@ -363,4 +415,5 @@ export {
   getCurrentSession,
   updateUserDetails,
   updateUserAvatar,
+  getWatchHistory,
 };
