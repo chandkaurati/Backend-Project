@@ -261,8 +261,8 @@ const updateUserDetails = asynchandler(async (req, res) => {
 });
 
 const updateUserAvatar = asynchandler(async (req, res) => {
-  let avatarLocalpath = req.file?.path
-  
+  let avatarLocalpath = req.file?.path;
+
   // console.log(req.file)
   // res.status(200).json({"message" : "successfull"})
   if (!avatarLocalpath) throw new ApiError(400, "avatar file is missing");
@@ -413,6 +413,8 @@ const getWatchHistory = asynchandler(async (req, res) => {
     );
 });
 
+
+
 export {
   registerUser,
   loginUser,
@@ -422,5 +424,6 @@ export {
   getCurrentSession,
   updateUserDetails,
   updateUserAvatar,
+  getUserChannelsProfile,
   getWatchHistory,
 };
